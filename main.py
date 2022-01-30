@@ -118,7 +118,7 @@ def process_post(request):
 
 
 def get_text(text, hps):
-    phoneme_sequence = phoneme_encoder.encode(text)
+    phoneme_sequence = phoneme_encoder.encode(text, reject_nonverbal=False)
     text_norm = text_to_sequence(phoneme_sequence, hps.data.text_cleaners)
     if hps.data.add_blank:
         text_norm = commons.intersperse(text_norm, 0)

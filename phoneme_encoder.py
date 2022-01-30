@@ -99,7 +99,7 @@ def preprocess(text):
     return text
 
 
-def encode(text):
+def encode(text, reject_nonverbal=True):
     text = preprocess(text)
     phones = ""
     while 0 < len(text):
@@ -119,6 +119,6 @@ def encode(text):
             phones += pyopenjtalk.g2p(text, kana=False)
             text = ""
     phones = phones.strip().replace(" ", "-").replace("--", "-")
-    if len(phones.strip(",.!?…♪- ")) == 0:
+    if reject_nonverbal and len(phones.strip(",.!?…♪- ")) == 0:
         return None
     return phones
