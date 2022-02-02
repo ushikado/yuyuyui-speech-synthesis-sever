@@ -18,6 +18,10 @@ from google.cloud import storage, firestore
 
 initialized = False
 
+access_control_allow_origin = "https://ushikado.dithub.io"
+
+document = firestore.Client().collection("speech-synthesis").document("speech-synthesis")
+
 all_characters = [
     "結城 友奈", "東郷 美森", "犬吠埼 風", "犬吠埼 樹", "三好 夏凜",
     "乃木 園子", "鷲尾 須美", "三ノ輪 銀", "乃木 若葉", "上里 ひなた",
@@ -29,7 +33,8 @@ all_characters = [
 
 
 def main(request):
-    update_timestamp("speech-synthesis", "speech-synthesis")
+    update_timestamp()
+    update_cors_header()
     init()
 
     if request.method == "GET":
@@ -42,18 +47,19 @@ def main(request):
     return process_preflight(request)
 
 
-def update_timestamp(collection_name, document_name):
+def update_timestamp():
     global document
 
     if "DEBUG" in os.environ:
         return
 
-    try:
-        document
-    except NameError:
-        document = firestore.Client().collection(collection_name).document(document_name)
-
     document.set({"timestamp": datetime.datetime.now()})
+    return
+
+
+def update_cors_header():
+    global document, access_control_allow_origin
+    access_control_allow_origin = document.get().to_dict()["Access-Control-Allow-Origin"]
     return
 
 
@@ -84,9 +90,9 @@ def init():
 
 
 def process_preflight(request):
+    global access_control_allow_origin
     headers = {
-        'Access-Control-Allow-Origin': 'https://ushikado.github.io',
-        #'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': access_control_allow_origin
         'Access-Control-Allow-Methods': 'POST',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Max-Age': '3600'
@@ -95,7 +101,7 @@ def process_preflight(request):
 
 
 def process_post(request):
-    global initialized, hps, net_g, _
+    global access_control_allow_origin, hps, net_g, _
     
     request_json = request.get_json()
     chara = request_json["character_name"]
@@ -113,7 +119,7 @@ def process_post(request):
     tmp_file = "/tmp/voice.ogg"
     soundfile.write(tmp_file, audio, hps.data.sampling_rate, subtype="VORBIS", format="OGG")
     response = flask.make_response(flask.send_file(tmp_file, mimetype="audio/ogg", as_attachment=False))
-    response.headers["Access-Control-Allow-Origin"] = "https://ushikado.github.io"
+    response.headers["Access-Control-Allow-Origin"] = access_control_allow_origin
     return response
 
 
