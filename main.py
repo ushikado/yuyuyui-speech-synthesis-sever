@@ -53,7 +53,9 @@ def update_timestamp():
     if "DEBUG" in os.environ:
         return
 
-    document.set({"timestamp": datetime.datetime.now()})
+    document_dict = document.get().to_dict()
+    document_dict["timestamp"] = datetime.datetime.now()
+    document.set(document_dict)
     return
 
 
