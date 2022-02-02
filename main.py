@@ -94,7 +94,7 @@ def init():
 def process_preflight(request):
     global access_control_allow_origin
     headers = {
-        'Access-Control-Allow-Origin': access_control_allow_origin
+        'Access-Control-Allow-Origin': access_control_allow_origin,
         'Access-Control-Allow-Methods': 'POST',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Max-Age': '3600'
