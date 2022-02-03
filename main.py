@@ -169,10 +169,12 @@ def process_synthesis(request_json):
         x_tst_lengths = torch.LongTensor([stn_tst.size(0)])
         audio = net_g.infer(x_tst, x_tst_lengths, sid=sid, noise_scale=.667, noise_scale_w=0.8, length_scale=1)[0][0,0].data.float().numpy()
 
-    pcm_buffer = io.BytesIO()
-    soundfile.write(pcm_buffer, audio, hps.data.sampling_rate, subtype="PCM_16", format="WAV")
-    pcm_buffer.seek(0)
-    mp3 = encode(pcm_buffer.read(), hps.data.sampling_rate)
+    wav_buffer = io.BytesIO()
+    soundfile.write(wav_buffer, audio, hps.data.sampling_rate, subtype="PCM_16", format="WAV")
+    wav_buffer.seek(0)
+    with wave.open(wav_buffer) as wa:
+        pcm = wa.readframes(wa.getnframes())
+    mp3 = encode(pcm, hps.data.sampling_rate)
     
     if "DEBUG" in os.environ:
         return mp3
