@@ -82,6 +82,8 @@ def init():
 
     load_model()
 
+    initialized = True
+
 
 def load_model():
     global model_gs_uri,  hps, net_g, _
@@ -101,8 +103,6 @@ def load_model():
     _ = net_g.eval()
 
     _ = utils.load_checkpoint("/tmp/model.pth", net_g, None)
-
-    initialized = True
 
 
 def process_preflight(request):
