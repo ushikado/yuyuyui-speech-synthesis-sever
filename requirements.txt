@@ -11,3 +11,5 @@ lameenc
 
 google-cloud-storage
 google-cloud-firestore
+google-cloud-logging
+google-cloud-core

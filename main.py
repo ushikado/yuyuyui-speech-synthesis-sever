@@ -18,8 +18,20 @@ import phoneme_encoder
 
 if not "DEBUG" in os.environ:
     import flask
+    import logging
+    import google.cloud.logging
+    from google.cloud.logging.handlers import CloudLoggingHandler
     from google.cloud import storage, firestore
-    document = firestore.Client().collection("speech-synthesis").document("speech-synthesis")
+    
+    document_name = os.environ["FIRESTORE_DOCUMENT"]  # "recording-studio-1"
+    document = firestore.Client().collection("speech-synthesis").document(document_name)
+
+    log_client = google.cloud.logging.Client()
+    log_handler = CloudLoggingHandler(log_client)
+    cloud_logger = logging.getLogger('cloudLogger')
+    cloud_logger.setLevel(logging.DEBUG)
+    cloud_logger.addHandler(log_handler)
+
 
 initialized = False
 
@@ -119,10 +131,14 @@ def process_preflight(request):
 def process_post(request):
     request_json = request.get_json()
     if "command" in request_json:
+        cloud_logger.warn("Received command from {}: {}".format(request.remote_addr, request_json))
         return process_command(request_json)
-    elif "character_name" in request_json and "text" in request_json:
+    elif set(request_json.keys()) == {"character_name", "text", "bitrate", "uid"}:
+        if "DEBUG" not in os.environ:
+            cloud_logger.warn("Received request from {} (uid {})".format(request.remote_addr, request_json["uid"]))
         return process_synthesis(request_json)
     else:
+        cloud_logger.warn("Received invalid request from {}: {}".format(request.remote_addr, request_json))
         return process_bad_request(request_json)
 
 
@@ -145,16 +161,17 @@ def process_command(request_json):
 def process_bad_request(request_json):
     global access_control_allow_origin
 
+    cloud_logger.warn("Bad request: {}".format(request_json))
     response = flask.make_response(flask.send_file("bad_request.mp3", mimetype="audio/mp3", as_attachment=False))
     response.headers["Access-Control-Allow-Origin"] = access_control_allow_origin
     return response
-    return ("", 400, headers)
 
 
 def process_synthesis(request_json):
-    global access_control_allow_origin, hps, net_g
+    global access_control_allow_origin, bitrate, hps, net_g
     chara = request_json["character_name"]
     text = request_json["text"]
+    bitrate = request_json["bitrate"]
 
     try:
         chara_id = all_characters.index(chara)
@@ -201,7 +218,7 @@ def encode(pcm, sampling_rate):
     encoder.set_bit_rate(bitrate)
     encoder.set_in_sample_rate(sampling_rate)
     encoder.set_channels(1)
-    encoder.set_quality(3)  # 2-highest, 7-fastest
+    encoder.set_quality(2)  # 2-highest, 7-fastest
     return encoder.encode(pcm) + encoder.flush()
 
 
@@ -217,6 +234,6 @@ if __name__ == "__main__":
             return self.data
     
     import sys
-    out = main(RequestStub( {"character_name": sys.argv[1], "text": sys.argv[2]} ))
+    out = main(RequestStub( {"character_name": sys.argv[1], "text": sys.argv[2], "bitrate": int(sys.argv[3]), "uid": None}))
     with open("out1.mp3", "bw") as fp:
         fp.write(out)
