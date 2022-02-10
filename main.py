@@ -86,7 +86,7 @@ def init():
 
 
 def load_model():
-    global model_gs_uri,  hps, net_g, _
+    global model_gs_uri,  hps, net_g
     
     if not "DEBUG" in os.environ:
         client = storage.Client()
@@ -100,9 +100,9 @@ def load_model():
         hps.train.segment_size // hps.data.hop_length,
         n_speakers=hps.data.n_speakers,
         **hps.model)
-    _ = net_g.eval()
+    net_g.eval()
 
-    _ = utils.load_checkpoint("/tmp/model.pth", net_g, None)
+    utils.load_checkpoint("/tmp/model.pth", net_g, None)
 
 
 def process_preflight(request):
@@ -152,7 +152,7 @@ def process_bad_request(request_json):
 
 
 def process_synthesis(request_json):
-    global access_control_allow_origin, hps, net_g, _
+    global access_control_allow_origin, hps, net_g
     chara = request_json["character_name"]
     text = request_json["text"]
 

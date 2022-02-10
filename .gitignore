@@ -4,6 +4,7 @@
 # voice
 *.wav
 *.ogg
+*.mp3
 
 # archive
 *.zip
