@@ -133,7 +133,7 @@ def process_post(request):
     if "command" in request_json:
         cloud_logger.warn("Received command from {}: {}".format(request.remote_addr, request_json))
         return process_command(request_json)
-    elif set(request_json.keys()) == {"character_name", "text", "bitrate", "uid"}:
+    elif set(request_json.keys()) == {"character_name", "text", "bitrate", "length_scale", "uid"}:
         if "DEBUG" not in os.environ:
             cloud_logger.info("Received request from {} (uid {})".format(request.remote_addr, request_json["uid"]))
         return process_synthesis(request_json)
@@ -171,6 +171,7 @@ def process_synthesis(request_json):
     global access_control_allow_origin, bitrate, hps, net_g
     chara = request_json["character_name"]
     text = request_json["text"]
+    length_scale = request_json["length_scale"]
     bitrate = request_json["bitrate"]
 
     try:
@@ -184,7 +185,7 @@ def process_synthesis(request_json):
     with torch.no_grad():
         x_tst = stn_tst.unsqueeze(0)
         x_tst_lengths = torch.LongTensor([stn_tst.size(0)])
-        audio = net_g.infer(x_tst, x_tst_lengths, sid=sid, noise_scale=.667, noise_scale_w=0.8, length_scale=1)[0][0,0].data.float().numpy()
+        audio = net_g.infer(x_tst, x_tst_lengths, sid=sid, noise_scale=.667, noise_scale_w=0.8, length_scale=length_scale)[0][0,0].data.float().numpy()
 
     wav_buffer = io.BytesIO()
     soundfile.write(wav_buffer, audio, hps.data.sampling_rate, subtype="PCM_16", format="WAV")
