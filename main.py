@@ -135,7 +135,7 @@ def process_post(request):
         return process_command(request_json)
     elif set(request_json.keys()) == {"character_name", "text", "bitrate", "uid"}:
         if "DEBUG" not in os.environ:
-            cloud_logger.warn("Received request from {} (uid {})".format(request.remote_addr, request_json["uid"]))
+            cloud_logger.info("Received request from {} (uid {})".format(request.remote_addr, request_json["uid"]))
         return process_synthesis(request_json)
     else:
         cloud_logger.warn("Received invalid request from {}: {}".format(request.remote_addr, request_json))
