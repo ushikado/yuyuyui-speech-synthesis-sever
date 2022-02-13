@@ -170,6 +170,13 @@ def process_bad_request(request_json):
 
 def process_synthesis(request_json):
     global access_control_allow_origin, bitrate, hps, net_g
+    headers = {
+        'Access-Control-Allow-Origin': access_control_allow_origin,
+        'Access-Control-Allow-Methods': 'POST',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Max-Age': '3600'
+    }
+    
     chara = request_json["character_name"]
     text = request_json["text"]
     length_scale = request_json["length_scale"]
