@@ -191,7 +191,7 @@ def process_synthesis(request_json):
     try:
         stn_tst = get_text(text, hps)
     except:
-        return ('{"error": "bad text"}', 204, headers)
+        return ('{"error": "bad text"}', 500, headers)
 
     with torch.no_grad():
         x_tst = stn_tst.unsqueeze(0)
