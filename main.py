@@ -164,6 +164,7 @@ def process_bad_request(request_json):
     cloud_logger.warn("Bad request: {}".format(request_json))
     response = flask.make_response(flask.send_file("bad_request.mp3", mimetype="audio/mp3", as_attachment=False))
     response.headers["Access-Control-Allow-Origin"] = access_control_allow_origin
+    response.status_code = 400
     return response
 
 
@@ -180,7 +181,10 @@ def process_synthesis(request_json):
         return process_bad_request(request_json)
 
     sid = torch.LongTensor([chara_id])
-    stn_tst = get_text(text, hps)
+    try:
+        stn_tst = get_text(text, hps)
+    except:
+        return (204, '{"error": "bad text"}', headers)
 
     with torch.no_grad():
         x_tst = stn_tst.unsqueeze(0)
